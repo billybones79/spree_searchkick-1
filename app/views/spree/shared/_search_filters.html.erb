@@ -1,0 +1,151 @@
+<div id="filters" class="filter-row">
+
+  <% unless @filters.blank? %>
+      <%= form_tag request.path, :method => :get, :id => 'top_products_filters', :class =>'clear' do %>
+          <%= hidden_field_tag 'keywords', params[:keywords] if params[:keywords] && !params[:keywords].blank? %>
+          <% if !params[:taxon].blank? %>
+            <%= hidden_field_tag 'taxon', params[:taxon] if params[:taxon] && !params[:taxon].blank? %>
+          <%else%>
+            <%= hidden_field_tag 'taxon', 1%>
+          <%end%>
+          <%= hidden_field_tag 'search[on_sale]', (params[:search][:on_sale] rescue false) %>
+
+
+
+          <%= raw(hash_as_hidden_fields({searchkick_options: params[:searchkick_options] })) if params[:searchkick_options] && !params[:searchkick_options].blank?  %>
+
+
+
+          <div class="filters-container">
+
+            <div class="togglefilter">
+
+              <div class="toggleaction">
+                <span><%= t('filters.order_by') %></span>
+                <i class="font-icon icon-mc-arrow-right"></i>
+              </div>
+
+              <div class="select-filter-container">
+                    <%= select_tag :order,  options_for_select(order_options, params[:order] || "_score:desc"), onchange: "$(this).parents('form').submit();", placeholder: t("search.sort_by") %>
+                    <%= hidden_field_tag :per_page, @per_page || params[:per_page] , onchange: "$(this).parents('form').submit();"%>
+              </div>
+            </div>
+
+
+            <% @filters.each do |filter| %>
+                <% labels = filter[:labels] || filter[:conds].map {|m,c| [m,m]} %>
+                <% params_scope = (params[:filter]) ? params[:filter][filter[:field_name]] : nil %>
+                <% if filter[:type] == :checkbox %>
+                    <div class="filter-container">
+                      <div class="filter-title"> <%= filter[:name] %> </div>
+                      <% labels.each do |nm,val| %>
+                          <% label = "#{filter[:name]}_#{nm}".gsub(/\s+/,'_') %>
+                          <span>
+	              <%=
+                  check_box_tag "filters[" + filter[:field_name].to_s + "][]",
+                                val,
+                                params_scope && params_scope.include?(val.to_s),
+                                { id:  label}
+                %>
+                            <label class="nowrap" for="<%= label %>"> <%= nm %> </label>
+	            </span>
+                      <% end %>
+                    </div>
+
+
+                <% elsif filter[:type] == :select %>
+
+
+                    <div class="togglefilter">
+
+                      <div class="toggleaction">
+                        <span><%= filter[:blank_label] %></span>
+                        <i class="font-icon icon-mc-arrow-right"></i>
+                      </div>
+
+                      <div class="select-filter-container">
+                        <%=
+                            select_tag "filter["+filter[:field_name].to_s+"][]",
+                                       options_for_select(labels, params_scope.presence),
+                                       include_blank: "<span>#{filter[:blank_label]}</span>" || "", onchange: "$(this).parents('form').submit();",  placeholder: filter[:blank_label]
+
+                        %>
+                      </div>
+                    </div>
+                <% elsif filter[:type] == :ov_select %>
+
+
+                    <div class="togglefilter">
+
+                      <div class="toggleaction">
+                        <span><%= filter[:blank_label] %></span>
+                        <i class="font-icon icon-mc-arrow-right"></i>
+                      </div>
+
+                      <div class="select-filter-container">
+                        <%=
+                            select_tag "filter["+filter[:field_name].to_s+"][]",
+                                       options_for_select(labels, params_scope.presence),
+                                       include_blank: "<span>#{filter[:blank_label]}</span>" || "", onchange: "$(this).parents('form').submit();", placeholder: filter[:blank_label]
+
+                        %>
+                      </div>
+                    </div>
+
+
+
+          <% elsif filter[:type] == :multi_level_select %>
+                    <div class="filter-container">
+                      <div class="category" data-target="<%= filter[:name] %>"><%= filter[:name] %></div>
+
+                      <div class="options optionsMultiple options-multi-level" data-target="<%= filter[:name] %>">
+                        <ul>
+                          <% filter[:conds].each_with_index do |(l, i), index| %>
+
+                              <li class="<%= ( params["filter"] && params["filter"][filter[:scope]] && params["filter"][filter[:scope]][l.to_s])? "selected" : "" %>" >
+                                <%= i[:name] %>
+                                <ul>
+                                  <% i[:values].each_with_index do |(label, val, scope), index2| %>
+
+                                      <li class="<%=
+                                        if params["filter"] &&
+                                            params["filter"][filter[:field_name]] &&
+                                            params["filter"][filter[:field_name]][filter[:scope]] &&
+                                            params["filter"][filter[:field_name]][filter[:scope]][l.to_s] &&
+                                            params["filter"][filter[:field_name]][filter[:scope]][l.to_s][filter[:scope2]] &&
+                                            params["filter"][filter[:field_name]][filter[:scope]][l.to_s][filter[:scope2]][label.to_s]
+                                          "selected"
+                                        end%>" >
+                                        <label for="<%= filter[:scope].to_s+"_"+index.to_s+"_"+filter[:scope2].to_s+"_"+index2.to_s %>">
+                                          <%= check_box_tag "filter[#{filter[:field_name]}][#{filter[:scope]}][#{l}][#{filter[:scope2]}][#{label}]", scope,( params["filter"] &&
+                                              params["filter"][filter[:field_name]] &&
+                                              params["filter"][filter[:field_name]][filter[:scope]] &&
+                                              params["filter"][filter[:field_name]][filter[:scope]][l.to_s] &&
+                                              params["filter"][filter[:field_name]][filter[:scope]][l.to_s][filter[:scope2]] &&
+                                              params["filter"][filter[:field_name]][filter[:scope]][l.to_s][filter[:scope2]][label.to_s]),
+                                                            {id: filter[:scope].to_s+"_"+index.to_s+"_"+filter[:scope2].to_s+"_"+index2.to_s ,onchange: "submitIn2Seconds($(this).form());"} %>
+
+                                          <%= val[0] %></label>
+                                      </li>
+
+                                  <% end %>
+                                </ul>
+                              </li>
+
+                          <% end %>
+                        </ul>
+                        <span class="close"></span>
+                      </div>
+                    </div>
+
+                <% end %>
+            <% end %>
+
+          </div>
+
+
+      <% end %>
+  <% end %>
+
+
+</div>
