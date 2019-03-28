@@ -46,6 +46,8 @@ module Spree
     def where_clause
       # Default items for where_clause
       where_clause = {
+          price: { not: nil },
+          available_on: {lte: Time.now}
 
       }
 
@@ -93,12 +95,13 @@ module Spree
           search_options[:misspellings] = { below: 1 }
         end
 
-
         search = Spree::Product.search(keywords_clause, search_options)
 
         # Add any search filters passed in
         # Adding search filters modifies the search query, which is why we need to wait on executing it until after search query is modified
+
         search = add_search_filters(search)
+
 
         search.execute
       end
@@ -119,7 +122,6 @@ module Spree
     def add_search_filters(search)
 
       return search unless filters
-
       @@all_filters ||= Spree::Core::SearchkickFilters.all_filters
 
       checkbox_filters = {}
@@ -129,10 +131,9 @@ module Spree
       filter_items = []
 
       # Find filter method definition from filters passed in
-      filters.to_a.each do |filter_param|
+      filters.to_h.to_a.each do |filter_param|
         search_filter, search_labels = filter_param
         filter = @@all_filters.find { |filter| filter[:field_name].to_s == search_filter.to_s }
-
 
         next if filter.nil?
         if filter[:type] == :checkbox
@@ -206,18 +207,13 @@ module Spree
           must: filter_items
         }
       }
-
       # Update the search query filter hash in order to process the additional filters as well as the base_search
-
-      if search.body[:query][:bool][:must][:dis_max]
-        search.body[:query][:bool][:must][:dis_max]||={}
-        search.body[:query][:bool][:must][:dis_max][:queries] ||= []
-        search.body[:query][:bool][:must][:dis_max][:queries] = search.body[:query][:bool][:must][:dis_max][:queries] + queries
-      else
-        search.body[:query][:bool][:must] =queries
+      unless search_filters[:bool][:must].empty?
+        search.body[:query][:bool] ||= {}
+        search.body[:query][:bool][:filter] ||= []
+        search.body[:query][:bool][:filter]+=filter_items
       end
 
-      search.body[:query][:bool][:filter].push(search_filters)
 
       # Update the search query filter hash in order to process the additional filters as well as the base_search
       search
@@ -252,12 +248,16 @@ module Spree
 
       end
     end
-
+    def integer_or_taxon(params)
+      if params.is_a? Integer
+        Spree::Taxon.find(params)
+      end
+    end
     def prepare(params)
       @properties[:query] = params[:query].blank? ? nil : params[:query]
       @properties[:filters] = params[:filter].blank? ? nil : params[:filter]
       @properties[:fields] = params[:fields].blank? ? nil : params[:fields]
-      @properties[:searchkick_options] = params[:searchkick_options].blank? ? {} : params[:searchkick_options].deep_symbolize_keys
+      @properties[:searchkick_options] = params[:searchkick_options].blank? ? {} : params[:searchkick_options]
       @properties[:taxons] = params[:taxons]
       @properties[:possible_answer_ids] = params[:possible_answer_ids]
 
@@ -266,14 +266,14 @@ module Spree
       @properties[:body_options] = params[:body_options] || {}
 
 
-      @properties[:taxon] = params[:taxon].blank? ? nil : Spree::Taxon.find(params[:taxon])
+      @properties[:taxon] = params[:taxon].blank? ? nil : integer_or_taxon(params[:taxon])
       @properties[:keywords] = params[:keywords]
       @properties[:search] = params[:search]
       @properties[:include_images] = params[:include_images]
 
 
 
-      params = params.deep_symbolize_keys
+      params = params
       per_page = (params[:per_page] || 24).to_i
       if per_page > 0
         @properties[:per_page] = per_page

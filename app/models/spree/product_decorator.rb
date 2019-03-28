@@ -36,16 +36,13 @@ Spree::Product.class_eval do
   # Add simple scopes
   ###############################
 
-  def self.additional_scopes
-    [
-        :descend_by_created_at,
-        :ascend_by_created_at,
-        :ascend_by_available_on,
-        :descend_by_available_on
-    ]
-  end
 
-  add_simple_scopes additional_scopes
+
+  scope :ascend_by_updated_at, -> { order(created_at: :asc) }
+  scope :descend_by_created_at, -> { order(created_at: :desc) }
+  scope :ascend_by_available_on, -> { order(available_on: :asc) }
+  scope :descend_by_available_on, -> { order(available_on: :desc) }
+
 
   ###############################
   # Translate custom fields
@@ -55,10 +52,6 @@ Spree::Product.class_eval do
   ###############################
   # New scopes
   ###############################
-
-  def on_sale?
-    master_variant.any? &&  master_variant.first.on_sale?
-  end
 
   def colors
     in_stock_variants.map{|v| v.option_values.colors.select :id }.flatten.uniq.compact
@@ -96,7 +89,9 @@ Spree::Product.class_eval do
       ).map{|r| p[:name_i18n_keyword][I18n.locale]}.map(&:strip)
     end
   end
-
+  def taxon_and_ancestors
+    taxons.map(&:self_and_ancestors).flatten.uniq
+  end
 
   def search_data
 
@@ -118,7 +113,7 @@ Spree::Product.class_eval do
 
     }
 
-    SpreeI18n::Config.available_locales.each do |l|
+   SolidusI18n::Config.available_locales.each do |l|
       json = json.deep_merge({
                                  name_i18n: {l.to_s => name(l.to_sym)},
                                  name_i18n_keyword: {l.to_s => name(l.to_sym)},

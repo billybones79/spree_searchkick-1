@@ -8,11 +8,19 @@ Spree::BaseController.class_eval do
                     Rails.application.config.i18n.default_locale || I18n.default_locale
                   end
   end
+
+  def get_products
+    @per_page = search_params[:per_page].blank? ? 10 : search_params[:per_page]
+    @searcher = build_searcher(search_params.merge(include_images: true, sorting_scope: sorting_scope, per_page: @per_page))
+    @products = @searcher.retrieve_products
+    setup_search_filters search_params.dup, @searcher
+  end
   
   def setup_search_filters params, searcher
 
     params[:filter] ||= {"brand"=>[""], "category"=>[""], "color"=>[""], "size"=>[""]}
     params[:taxon] ||= Spree::Taxonomy.first
+    params = params.to_h
     params_taxon = params.dup
     params_taxon[:filter].delete("taxon_ids") if  params_taxon[:filter]
     params_taxon.delete("taxons")
@@ -97,5 +105,12 @@ Spree::BaseController.class_eval do
 
 
   end
+
+  private
+
+  def search_params
+    params.permit!
+  end
+
 
 end

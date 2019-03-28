@@ -798,7 +798,7 @@ function setup_search_autocomplete(){
                     "width": ($(this).width() + 20 + "px")
                 });
             },
-            source:"/autocomplete"}).change(function(e){$this.parents("form").submit();
+            source:"/autocomplete"}).change(function(e){$(this).parents("form").submit();
         }
     );
 
