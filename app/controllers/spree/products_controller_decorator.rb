@@ -12,7 +12,7 @@ Spree::ProductsController.class_eval do
   end
 
   def autocomplete
-    render json: Spree::Product.autocomplete(params[:term])
+   render json: Spree::Product.autocomplete(params[:term])
   end
 
 

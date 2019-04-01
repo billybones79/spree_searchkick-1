@@ -793,14 +793,20 @@ function setup_search_autocomplete(){
 
     $("input.autocomplete:not(.ui-autocomplete-input)").autocomplete(
         {
-            open: function(event, ui) {
-                $(this).autocomplete("widget").css({
-                    "width": ($(this).width() + 20 + "px")
-                });
+            source: function(request, response) {
+                $.ajax({
+                    url: "/autocomplete",
+                    data: {term: request.term},
+                    dataType: "json",
+                    success: function (data) {
+                        response(data.products);
+                    }
+                })
             },
-            source:"/autocomplete"}).change(function(e){$(this).parents("form").submit();
-        }
-    );
+            close: function(event, ui) {
+                $(this).parents("form").submit();
+            }
+        });
 
     console.log($("input.autocomplete"));
 

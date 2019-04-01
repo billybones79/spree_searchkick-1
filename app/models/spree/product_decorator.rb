@@ -96,7 +96,6 @@ Spree::Product.class_eval do
   def search_data
 
 
-
     json = {
         price: price,
         currency: Spree::Config.currency,

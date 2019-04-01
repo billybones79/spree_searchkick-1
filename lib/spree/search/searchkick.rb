@@ -122,7 +122,7 @@ module Spree
     def add_search_filters(search)
 
       return search unless filters
-      @@all_filters ||= Spree::Core::SearchkickFilters.all_filters
+      @@all_filters ||= Spree::Core::BaseFilter.all_filters
 
       checkbox_filters = {}
       # Stuff that goes directly in the query
