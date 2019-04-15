@@ -28,7 +28,8 @@
             </div>
 
 
-            <% @filters.each.to_a do |filter| %>
+            <% @filters.each do |filter| %>
+                <% filter = filter.filter%>
                 <% labels = filter[:labels] || filter[:conds].map {|m,c| [m,m]} %>
                 <% params_scope = (params[:filter]) ? params[:filter][filter[:field_name]] : nil %>
                 <% if filter[:type] == :checkbox %>
