@@ -4,6 +4,10 @@
 en:
   hello: "Hello world"
   filters:
-    all_categories: Every Categories
-
+    all_category: Every Categories
+    all_color: Every color
+    all_size: Every size
+    all_brand: Every brand
+    choose: Choose
+    order_by : Order by
 
