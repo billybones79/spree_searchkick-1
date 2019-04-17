@@ -25,7 +25,7 @@ module Spree
         @scope= name
         @labels = tx_labels(option)
         @conds = tx_conds(option)
-        @blank_label = I18n.t('filters.all_#{name}')
+        @blank_label = I18n.t("filters.all_#{name}")
       end
 
       def self.brand_filter

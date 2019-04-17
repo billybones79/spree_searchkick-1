@@ -35,7 +35,7 @@ module Spree
         @scope= name
         @labels = ov_labels(option)
         @conds = ov_conds(option)
-        @blank_label = I18n.t('filters.all_#{name}')
+        @blank_label = I18n.t("filters.all_#{name}")
       end
 
       def self.color_filter
