@@ -17,14 +17,6 @@ Spree::BaseController.class_eval do
     setup_search_filters search_params.dup, @searcher
   end
 
-  def init_all_filters
-    Spree::Core::OvFilter.color_filter
-    Spree::Core::OvFilter.size_filter
-    Spree::Core::TxFilter.brand_filter
-    Spree::Core::TxFilter.category_filter
-
-  end
-
   def prepare_param(name, params, searcher, info)
     params_p = params.dup
     params_p[:filter].delete(name.to_s) if  params_p[:filter]
@@ -44,9 +36,7 @@ Spree::BaseController.class_eval do
   end
 
   def setup_search_filters params, searcher
-    init_all_filters
     params[:filter] ||= {"brand"=>[""], "category"=>[""], "color"=>[""], "size"=>[""]}
-    params[:taxon] ||= Spree::Taxonomy.first
     params = params.to_h
     params_taxon = params.dup
     params_taxon[:filter].delete("taxon_ids") if  params_taxon[:filter]
