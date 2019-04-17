@@ -22,8 +22,8 @@ Spree::Product.class_eval do
 
   translates :name, :description, :meta_description, :meta_keywords, :slug,
              fallbacks_for_empty_translations: true
-   translates :content_verified,             fallbacks_for_empty_translations: false
-  self.whitelisted_ransackable_attributes =  whitelisted_ransackable_attributes + ['name','custom_fields', 'product_code', 'created_at', 'available_on', 'with_variant_sku', "custom_field", "custom_field2", "custom_field3"]
+  translates :content_verified,             fallbacks_for_empty_translations: false
+  self.whitelisted_ransackable_attributes =  whitelisted_ransackable_attributes + ['name','custom_fields', 'product_code', 'created_at', 'available_on', "custom_field", "custom_field2", "custom_field3"]
   self.whitelisted_ransackable_associations = whitelisted_ransackable_associations + ['variant_images', 'master', 'product_properties', 'taxons', 'option_values']
 
 
@@ -36,13 +36,16 @@ Spree::Product.class_eval do
   # Add simple scopes
   ###############################
 
+  def self.additional_scopes
+    [
+        :descend_by_created_at,
+        :ascend_by_created_at,
+        :ascend_by_available_on,
+        :descend_by_available_on
+    ]
+  end
 
-
-  scope :ascend_by_updated_at, -> { order(created_at: :asc) }
-  scope :descend_by_created_at, -> { order(created_at: :desc) }
-  scope :ascend_by_available_on, -> { order(available_on: :asc) }
-  scope :descend_by_available_on, -> { order(available_on: :desc) }
-
+  add_simple_scopes additional_scopes
 
   ###############################
   # Translate custom fields
@@ -53,6 +56,10 @@ Spree::Product.class_eval do
   # New scopes
   ###############################
 
+  def on_sale?
+    master_variant.any? &&  master_variant.first.on_sale?
+  end
+
   def colors
     in_stock_variants.map{|v| v.option_values.colors.select :id }.flatten.uniq.compact
   end
@@ -61,7 +68,7 @@ Spree::Product.class_eval do
   end
 
   def self.search_fields
-      ["name_i18n."+I18n.locale.to_s+"^10", "sku^3", "code^10", "brand", "taxon_name_i18n."+I18n.locale.to_s+"^2" ]
+    ["name_i18n."+I18n.locale.to_s+"^10", "sku^3", "code^10", "brand", "taxon_name_i18n."+I18n.locale.to_s+"^2" ]
   end
   def self.autocomplete_fields
     ["name_i18n."+I18n.locale.to_s+"^10", "sku^3", "code^10", "brand", "taxon_name_i18n."+I18n.locale.to_s+"^2" ]
@@ -89,11 +96,10 @@ Spree::Product.class_eval do
       ).map{|r| p[:name_i18n_keyword][I18n.locale]}.map(&:strip)
     end
   end
-  def taxon_and_ancestors
-    taxons.map(&:self_and_ancestors).flatten.uniq
-  end
+
 
   def search_data
+
 
 
     json = {
@@ -112,7 +118,7 @@ Spree::Product.class_eval do
 
     }
 
-   SolidusI18n::Config.available_locales.each do |l|
+    SpreeI18n::Config.available_locales.each do |l|
       json = json.deep_merge({
                                  name_i18n: {l.to_s => name(l.to_sym)},
                                  name_i18n_keyword: {l.to_s => name(l.to_sym)},

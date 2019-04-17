@@ -1,11 +1,6 @@
 module Spree
   module Core
     class TxFilter < Spree::Core::BaseFilter
-      @@all_tx_filters = []
-
-      def self.all_tx
-        @@all_tx_filters
-      end
 
       def tx_conds(taxons)
         conds = []
@@ -31,20 +26,23 @@ module Spree
         @labels = tx_labels(option)
         @conds = tx_conds(option)
         @blank_label = I18n.t('filters.all_#{name}')
-        @@all_tx_filters.each do |filters|
-          return if filters[:field_name] == name
-        end
-        @@all_tx_filters << self.filter
       end
 
       def self.brand_filter
-        taxonomy = Spree::Taxonomy.find(Rails.configuration.brand_id)
+        taxonomy = Spree::Taxon.find(Rails.configuration.brand_id)
         self.new(:brand, taxonomy.root.leaves.includes(:translations))
       end
 
       def self.category_filter
-        taxonomy = Spree::Taxonomy.find(Rails.configuration.category_id)
+        taxonomy = Spree::Taxon.find(Rails.configuration.category_id)
         self.new(:category, taxonomy.root.leaves.includes(:translations))
+      end
+
+      def self.all_tx
+        all_tx_filters = []
+        all_tx_filters << self.brand_filter.filter
+        all_tx_filters << self.category_filter.filter
+        all_tx_filters
       end
     end
   end

@@ -1,3 +1,4 @@
+
 Spree::OptionValue.class_eval do
 
   default_scope { order("#{quoted_table_name}.position") }

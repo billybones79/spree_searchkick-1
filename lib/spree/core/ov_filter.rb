@@ -1,12 +1,6 @@
 module Spree
   module Core
     class OvFilter < Spree::Core::BaseFilter
-      @@all_ov_filters = []
-
-      def self.all_ov
-        @@all_ov_filters
-      end
-
       def ov_conds(option)
         conds = []
         tmpconds = {}
@@ -42,20 +36,22 @@ module Spree
         @labels = ov_labels(option)
         @conds = ov_conds(option)
         @blank_label = I18n.t('filters.all_#{name}')
-        @@all_ov_filters.each do |filters|
-          return if filters[:field_name] == name
-        end
-        @@all_ov_filters << self.filter
       end
 
       def self.color_filter
-       self.new(:colors, Spree::OptionValue.includes(:translations).colors.reorder(:search_presentation).order(:presentation).all)
+       self.new(:color, Spree::OptionValue.includes(:translations).colors.reorder(:search_presentation).order(:presentation).all)
       end
 
       def self.size_filter
         self.new(:size, Spree::OptionValue.sizes.includes(:translations).all)
       end
 
+      def self.all_ov
+        all_ov_filters = []
+        all_ov_filters << self.color_filter.filter
+        all_ov_filters << self.size_filter.filter
+        all_ov_filters
+      end
     end
   end
 end

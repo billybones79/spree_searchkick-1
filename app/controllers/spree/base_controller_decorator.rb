@@ -1,5 +1,4 @@
 Spree::BaseController.class_eval do
-  @@filters_init = false
   def set_user_language
     I18n.locale = if params[:locale] && SpreeI18n::Config.supported_locales.include?(params[:locale].to_sym)
                     params[:locale]
@@ -12,21 +11,12 @@ Spree::BaseController.class_eval do
 
   def get_products
     @per_page = search_params[:per_page].blank? ? 10 : search_params[:per_page]
-    @searcher = build_searcher(search_params.merge(include_images: true, sorting_scope: sorting_scope, per_page: @per_page))
+    p = search_params.deep_dup.merge(include_images: true, sorting_scope: sorting_scope, per_page: @per_page)
+    @searcher = build_searcher(p)
     @products = @searcher.retrieve_products
     setup_search_filters search_params.dup, @searcher
   end
-
-  def init_all_filters
-    Spree::Core::OvFilter.color_filter
-    Spree::Core::OvFilter.size_filter
-    Spree::Core::TxFilter.brand_filter
-    Spree::Core::TxFilter.category_filter
-
-  end
-
-  def prepare_param(name, params, searcher, info)
-    params_p = params.dup
+  def prepare_param(name, params_p, searcher, info)
     params_p[:filter].delete(name.to_s) if  params_p[:filter]
     params_p.delete("page")
     params_p[:per_page]=100000
@@ -34,21 +24,19 @@ Spree::BaseController.class_eval do
     params_p[:body_options][:aggs] = Hash["uniq_".concat(name.to_s+"s").to_sym, {terms: {field: name , size: '1000'}}]
 
     searcher.reinitialize(params_p)
-    field_name = searcher.retrieve_products
+    prod = searcher.retrieve_products
     if info == :taxon
-      Spree::Taxon.includes(:translations).where( id: (field_name.aggs["uniq_".concat(name.to_s+"s")]["buckets"].map{|b| b["key"]}))
+      Spree::Taxon.includes(:translations).where( id: (prod.aggs["uniq_".concat(name.to_s+"s")]["buckets"].map{|b| b["key"]}))
     elsif info == :option
-      Spree::OptionValue.includes(:translations).where( id: (field_name.aggs["uniq_".concat(name.to_s+"s")]["buckets"].map{|b| b["key"]}))
+      Spree::OptionValue.includes(:translations).where( id: (prod.aggs["uniq_".concat(name.to_s+"s")]["buckets"].map{|b| b["key"]}))
     end
 
   end
 
   def setup_search_filters params, searcher
-    init_all_filters
     params[:filter] ||= {"brand"=>[""], "category"=>[""], "color"=>[""], "size"=>[""]}
-    params[:taxon] ||= Spree::Taxonomy.first
-    params = params.to_h
-    params_taxon = params.dup
+
+    params_taxon = params.deep_dup
     params_taxon[:filter].delete("taxon_ids") if  params_taxon[:filter]
     params_taxon.delete("taxons")
     params_taxon.delete("page")
@@ -64,18 +52,22 @@ Spree::BaseController.class_eval do
       searcher.retrieve_products.aggs["uniq_taxons"]["buckets"].map{|b| b["key"]}
     end
     @colors = Rails.cache.fetch(["colors_filter", params]) do
-      prepare_param(:color, params, searcher, :option)
+      params_p = params.deep_dup
+      prepare_param(:color, params_p, searcher, :option)
     end
 
     @sizes =  Rails.cache.fetch(["sizes_filter", params]) do
-      prepare_param(:size, params, searcher, :option)
+      params_p = params.deep_dup
+      prepare_param(:size, params_p, searcher, :option)
     end
 
     @brand = Rails.cache.fetch(["brands_filter", params]) do
-      prepare_param(:brand, params, searcher, :taxon)
+      params_p = params.deep_dup
+      prepare_param(:brand, params_p, searcher, :taxon)
     end
     @category = Rails.cache.fetch(["categories_filter", params]) do
-      prepare_param(:category, params, searcher, :taxon)
+      params_p = params.deep_dup
+      prepare_param(:category, params_p, searcher, :taxon)
     end
 
     @filters = []

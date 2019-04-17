@@ -1,9 +1,9 @@
+
 <% @taxons = @taxon && @taxon.parent ? @taxon.parent.children : Spree::Taxon.roots %>
 
 <%= form_tag spree.products_path, :method => :get, class: "navbar-form" do %>
-    <%= hidden_field_tag 'taxon', params[:taxon] if params[:taxon] && !params[:taxon].blank? %>
-  <div class="form-group">
-    <%= search_field_tag :keywords, params[:keywords], :placeholder => Spree.t(:search), class: "form-control autocomplete" %>
-  </div>
-  <%= submit_tag Spree.t(:search), :name => nil, class: "btn btn-success" %>
+    <div class="form-group">
+      <%= search_field_tag :keywords, params[:keywords], :placeholder => Spree.t(:search), class: "form-control autocomplete" %>
+    </div>
+    <%= submit_tag Spree.t(:search), :name => nil, class: "btn btn-success" %>
 <% end %>
