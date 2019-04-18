@@ -1,7 +1,7 @@
 <div id="filters" class="filter-row">
 
   <% unless @filters.blank? %>
-      <%= form_tag request.path, :method => :get, :id => 'top_products_filters', :class =>'clear' do %>
+      <%= form_tag request.path, :method => :get, :id => 'top_products_filters' do %>
           <%= hidden_field_tag 'keywords', params[:keywords] if params[:keywords] && !params[:keywords].blank? %>
           <%= hidden_field_tag 'taxon', params[:taxon] if params[:taxon] && !params[:taxon].blank? %>
           <%= hidden_field_tag 'search[on_sale]', (params[:search][:on_sale] rescue false) %>
