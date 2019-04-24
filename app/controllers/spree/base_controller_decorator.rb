@@ -1,5 +1,4 @@
 Spree::BaseController.class_eval do
-  @@filters_init = false
   def set_user_language
     I18n.locale = if params[:locale] && SpreeI18n::Config.supported_locales.include?(params[:locale].to_sym)
                     params[:locale]

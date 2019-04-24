@@ -155,7 +155,8 @@ function setup_search_autocomplete(){
             select: function(event, ui) {
                 $(this).val(ui.item.value);
                 $(this).parents("form").submit();
-            }
+            },
+            width: 'resolve'
         });
 
     console.log($("input.autocomplete"));

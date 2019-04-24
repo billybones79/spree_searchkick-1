@@ -4,7 +4,6 @@ Spree::Product.class_eval do
   # Override ransack whitelist
   ###############################
   validates :slug, length: { minimum: 3, maximum: 255 }, allow_blank: true, uniqueness: true
-  validates :product_code, presence: true
   validates :price,  numericality:{greater_than: 0}
   attr_accessor :highlight_slug
 
@@ -22,15 +21,9 @@ Spree::Product.class_eval do
 
   translates :name, :description, :meta_description, :meta_keywords, :slug,
              fallbacks_for_empty_translations: true
-   translates :content_verified,             fallbacks_for_empty_translations: false
-  self.whitelisted_ransackable_attributes =  whitelisted_ransackable_attributes + ['name','custom_fields', 'product_code', 'created_at', 'available_on', 'with_variant_sku', "custom_field", "custom_field2", "custom_field3"]
+  self.whitelisted_ransackable_attributes =  whitelisted_ransackable_attributes + ['name','custom_fields', 'created_at', 'available_on', 'with_variant_sku', "custom_field", "custom_field2", "custom_field3"]
   self.whitelisted_ransackable_associations = whitelisted_ransackable_associations + ['variant_images', 'master', 'product_properties', 'taxons', 'option_values']
 
-
-
-  def self.ransackable_scopes(thefyck)
-    [:of_size]
-  end
 
   ###############################
   # Add simple scopes

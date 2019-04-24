@@ -1,2 +1,9 @@
 @import 'select2';
 @import 'jquery-ui';
+
+.select-filter-container {
+  margin: 5px 0px;
+  .select2-container {
+  width: 25%;
+  }
+}
