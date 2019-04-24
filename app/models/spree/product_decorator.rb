@@ -22,7 +22,6 @@ Spree::Product.class_eval do
 
   translates :name, :description, :meta_description, :meta_keywords, :slug,
              fallbacks_for_empty_translations: true
-  translates :content_verified,             fallbacks_for_empty_translations: false
   self.whitelisted_ransackable_attributes =  whitelisted_ransackable_attributes + ['name','custom_fields', 'product_code', 'created_at', 'available_on', "custom_field", "custom_field2", "custom_field3"]
   self.whitelisted_ransackable_associations = whitelisted_ransackable_associations + ['variant_images', 'master', 'product_properties', 'taxons', 'option_values']
 
