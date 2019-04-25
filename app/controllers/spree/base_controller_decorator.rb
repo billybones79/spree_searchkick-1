@@ -80,7 +80,6 @@ Spree::BaseController.class_eval do
 
 
     Spree::OptionType.all.each_with_index do |ot, index|
-      byebug
       name = ot[:presentation].downcase
       @ov_filters << Rails.cache.fetch([name+"_filter", params]) do
         prepare_param(name.to_sym, params, searcher, :option )
