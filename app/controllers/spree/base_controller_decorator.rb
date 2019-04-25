@@ -35,8 +35,8 @@ Spree::BaseController.class_eval do
   end
 
   def setup_search_filters params, searcher
-    if params[:filter].nil?
-      blank_filter = {}
+    if params[:filter].nil? || params[:filter].empty?
+      blank_filter = {:brand =>[""], :category =>[""]}
       Spree::OptionType.all.each do |ot|
         name= ot[:presentation].downcase
         blank_filter[name.to_sym] = [""]
@@ -59,11 +59,6 @@ Spree::BaseController.class_eval do
 
       searcher.retrieve_products.aggs["uniq_taxons"]["buckets"].map{|b| b["key"]}
     end
-    option_types = Spree::OptionType.all
-
-    option_types.each do ||
-
-    end
 
     @ov_filters = []
     @filters = []
@@ -85,13 +80,16 @@ Spree::BaseController.class_eval do
 
 
     Spree::OptionType.all.each_with_index do |ot, index|
+      byebug
       name = ot[:presentation].downcase
       @ov_filters << Rails.cache.fetch([name+"_filter", params]) do
         prepare_param(name.to_sym, params, searcher, :option )
       end
       @filters << Rails.cache.fetch(["searchkick_filter_"+name+"s", @ov_filters.fetch(index)]) do
-        Spree::Core::OvFilter.new(name.to_sym, @ov_filters.fetch(index))
+          Spree::Core::OvFilter.new(name.to_sym, @ov_filters.fetch(index))
       end
+
+
 
     end
 

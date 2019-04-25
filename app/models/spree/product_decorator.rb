@@ -53,6 +53,9 @@ Spree::Product.class_eval do
   def sizes
     in_stock_variants.map{|v| v.option_values.sizes.select :id }.flatten.uniq.compact
   end
+  def ov_select(ot)
+    in_stock_variants.map{|v| v.option_values.where(option_type_id: ot[:id]).select :id }.flatten.uniq.compact
+  end
 
   def self.search_fields
       ["name_i18n."+I18n.locale.to_s+"^10", "sku^3", "code^10", "brand", "taxon_name_i18n."+I18n.locale.to_s+"^2" ]
@@ -95,10 +98,7 @@ Spree::Product.class_eval do
         currency: Spree::Config.currency,
         sku: sku,
         taxon_ids: taxon_and_ancestors.map(&:id),
-        size: sizes.map(&:id),
-        color: colors.map(&:id),
         available_on: available_on,
-
         leftmost_taxon: taxons.minimum(:lft),
         id: id,
         brand:taxons.where(taxonomy: Rails.configuration.brand_id).where.not(parent_id: nil).order(:lft).last.try(:id),
@@ -112,6 +112,13 @@ Spree::Product.class_eval do
                                  name_i18n_keyword: {l.to_s => name(l.to_sym)},
                                  description_i18n:{l.to_s => description(l.to_sym)},
                                  taxon_names_i18n:{l.to_s => taxon_and_ancestors.map{|t| t.name(l.to_sym)}},
+                             })
+   end
+
+    Spree::OptionType.all.each do |ot|
+      json = json.deep_merge({
+                                 ot[:presentation].downcase.to_sym => ov_select(ot).map(&:id)
+
                              })
     end
 

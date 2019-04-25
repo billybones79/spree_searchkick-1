@@ -17,17 +17,19 @@ module Spree
 
       def ov_labels(option)
         labels = {}
-        ot = Spree::OptionType.where(id: option.first[:option_type_id]).first
-        sorted_ov =  option.sort_by( &(ot[:sorted_by_position] ? :position : :maybe_search_presentation))
-        sorted_ov.each do |c|
-          unless labels[c.maybe_search_presentation]
-            if c[:alternate_presentation]
-              labels[c.maybe_search_presentation] =  ["<span class = 'color' style='background-color:#{c.alternate_presentation}'></span><span>"+c.maybe_search_presentation+'</span>' , c.maybe_search_presentation]
-            else
-              labels[c.maybe_search_presentation] =  ["<span>"+c.maybe_search_presentation+'</span>' , c.maybe_search_presentation]
+        unless option.empty?
+          ot = Spree::OptionType.where(id: option.first[:option_type_id]).first
+          sorted_ov =  option.sort_by( &(ot[:sorted_by_position] ? :position : :maybe_search_presentation))
+          sorted_ov.each do |c|
+            unless labels[c.maybe_search_presentation]
+              if c[:alternate_presentation]
+                labels[c.maybe_search_presentation] =  ["<span class = 'color' style='background-color:#{c.alternate_presentation}'></span><span>"+c.maybe_search_presentation+'</span>' , c.maybe_search_presentation]
+              else
+                labels[c.maybe_search_presentation] =  ["<span>"+c.maybe_search_presentation+'</span>' , c.maybe_search_presentation]
+              end
             end
           end
-        end
+      end
         labels.values
       end
 
