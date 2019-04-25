@@ -35,7 +35,14 @@ Spree::BaseController.class_eval do
   end
 
   def setup_search_filters params, searcher
-    params[:filter] ||= {"brand"=>[""], "category"=>[""], "color"=>[""], "size"=>[""]}
+    if params[:filter].nil?
+      blank_filter = {}
+      Spree::OptionType.all.each do |ot|
+        name= ot[:presentation].downcase
+        blank_filter[name.to_sym] = [""]
+      end
+      params[:filter] = blank_filter
+    end
     params = params.to_h
     params_taxon = params.dup
     params_taxon[:filter].delete("taxon_ids") if  params_taxon[:filter]
@@ -52,13 +59,15 @@ Spree::BaseController.class_eval do
 
       searcher.retrieve_products.aggs["uniq_taxons"]["buckets"].map{|b| b["key"]}
     end
-    @colors = Rails.cache.fetch(["colors_filter", params]) do
-      prepare_param(:color, params, searcher, :option)
+    option_types = Spree::OptionType.all
+
+    option_types.each do ||
+
     end
 
-    @sizes =  Rails.cache.fetch(["sizes_filter", params]) do
-      prepare_param(:size, params, searcher, :option)
-    end
+    @ov_filters = []
+    @filters = []
+
 
     @brand = Rails.cache.fetch(["brands_filter", params]) do
       prepare_param(:brand, params, searcher, :taxon)
@@ -67,7 +76,6 @@ Spree::BaseController.class_eval do
       prepare_param(:category, params, searcher, :taxon)
     end
 
-    @filters = []
     @filters << Rails.cache.fetch(["searchkick_filter_brands", @brand]) do
       Spree::Core::TxFilter.new(:brand, @brand)
     end
@@ -75,13 +83,17 @@ Spree::BaseController.class_eval do
       Spree::Core::TxFilter.new(:category, @category)
     end
 
-    @filters << Rails.cache.fetch(["searchkick_filter_colors", @colors]) do
-      Spree::Core::OvFilter.new(:color, @colors)
-    end
-    @filters << Rails.cache.fetch(["searchkick_filter_sizes", @sizes]) do
-      Spree::Core::OvFilter.new(:size, @sizes)
-    end
 
+    Spree::OptionType.all.each_with_index do |ot, index|
+      name = ot[:presentation].downcase
+      @ov_filters << Rails.cache.fetch([name+"_filter", params]) do
+        prepare_param(name.to_sym, params, searcher, :option )
+      end
+      @filters << Rails.cache.fetch(["searchkick_filter_"+name+"s", @ov_filters.fetch(index)]) do
+        Spree::Core::OvFilter.new(name.to_sym, @ov_filters.fetch(index))
+      end
+
+    end
 
   end
 

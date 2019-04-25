@@ -46,6 +46,7 @@ Spree::Product.class_eval do
   # New scopes
   ###############################
 
+
   def colors
     in_stock_variants.map{|v| v.option_values.colors.select :id }.flatten.uniq.compact
   end
